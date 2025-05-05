@@ -175,3 +175,108 @@ class Biblioteca:
         self.conn.commit()
         return "Llibre retornat correctament"
 
+def main():
+    biblioteca = Biblioteca()
+    
+    while True:
+        print("\n--- MENÚ PRINCIPAL ---")
+        print("1. Gestió d'usuaris")
+        print("2. Gestió de llibres")
+        print("3. Gestió de préstecs")
+        print("4. Sortir")
+        
+        opcio = input("Selecciona una opció: ")
+        
+        if opcio == "1":
+            menu_usuaris(biblioteca)
+        elif opcio == "2":
+            menu_llibres(biblioteca)
+        elif opcio == "3":
+            menu_prestecs(biblioteca)
+        elif opcio == "4":
+            print("Fins aviat!")
+            break
+        else:
+            print("Opció no vàlida. Torna a intentar.")
+
+def menu_usuaris(biblioteca):
+    while True:
+        print("\n--- GESTIÓ D'USUARIS ---")
+        print("1. Afegir usuari")
+        print("2. Llistar usuaris")
+        print("3. Eliminar usuari")
+        print("4. Tornar al menú principal")
+        
+        opcio = input("Selecciona una opció: ")
+        
+        if opcio == "1":
+            usuari = Usuari()
+            usuari.introduir_dades()
+            print(biblioteca.afegir_usuari(usuari))
+        elif opcio == "2":
+            print("\n--- LLISTA D'USUARIS ---")
+            print(biblioteca.imprimir_usuari5())
+        elif opcio == "3":
+            dni = input("Introdueix el DNI de l'usuari a eliminar: ")
+            print(biblioteca.eliminar_usuari(dni))
+        elif opcio == "4":
+            break
+        else:
+            print("Opció no vàlida. Torna a intentar.")
+
+def menu_llibres(biblioteca):
+    while True:
+        print("\n--- GESTIÓ DE LLIBRES ---")
+        print("1. Afegir llibre")
+        print("2. Llistar tots els llibres")
+        print("3. Llistar llibres disponibles")
+        print("4. Llistar llibres en préstec")
+        print("5. Eliminar llibre")
+        print("6. Tornar al menú principal")
+        
+        opcio = input("Selecciona una opció: ")
+        
+        if opcio == "1":
+            llibre = Llibre()
+            llibre.introduir_dades()
+            print(biblioteca.afegir_llibre(llibre))
+        elif opcio == "2":
+            print("\n--- TOTS ELS LLIBRES ---")
+            print(biblioteca.imprimir_llibres("tots"))
+        elif opcio == "3":
+            print("\n--- LLIBRES DISPONIBLES ---")
+            print(biblioteca.imprimir_llibres("disponibles"))
+        elif opcio == "4":
+            print("\n--- LLIBRES EN PRÉSTEC ---")
+            print(biblioteca.imprimir_llibres("prestec"))
+        elif opcio == "5":
+            titol = input("Introdueix el títol del llibre a eliminar: ")
+            print(biblioteca.eliminar_llibre(titol))
+        elif opcio == "6":
+            break
+        else:
+            print("Opció no vàlida. Torna a intentar.")
+
+def menu_prestecs(biblioteca):
+    while True:
+        print("\n--- GESTIÓ DE PRÉSTECS ---")
+        print("1. Prestar llibre")
+        print("2. Tornar llibre")
+        print("3. Tornar al menú principal")
+        
+        opcio = input("Selecciona una opció: ")
+        
+        if opcio == "1":
+            titol = input("Introdueix el títol del llibre: ")
+            dni = input("Introdueix el DNI de l'usuari: ")
+            print(biblioteca.prestar_llibre(titol, dni))
+        elif opcio == "2":
+            titol = input("Introdueix el títol del llibre a tornar: ")
+            print(biblioteca.tornar_llibre(titol))
+        elif opcio == "3":
+            break
+        else:
+            print("Opció no vàlida. Torna a intentar.")
+
+if __name__ == "__main__":
+    main()
