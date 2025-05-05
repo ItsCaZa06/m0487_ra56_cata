@@ -32,3 +32,146 @@ class Llibre:
         self.dni_prestec = "None"
         return "Dades introduïdes correctament"
 
+class Biblioteca:
+    def __init__(self):
+        self.conn = sqlite3.connect('biblioteca.db')
+        self.crear_taules()
+    
+    def crear_taules(self):
+        cursor = self.conn.cursor()
+        
+        # Crear taula d'usuaris
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS usuaris (
+            dni TEXT PRIMARY KEY,
+            nom TEXT,
+            cognoms TEXT
+        )
+        ''')
+        
+        # Crear taula de llibres
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS llibres (
+            titol TEXT PRIMARY KEY,
+            autor TEXT,
+            dni_prestec TEXT DEFAULT 'None',
+            FOREIGN KEY (dni_prestec) REFERENCES usuaris(dni)
+        )
+        ''')
+        
+        self.conn.commit()
+    
+    def cross_tables(self):
+        cursor = self.conn.cursor()
+        cursor.execute('''
+        SELECT l.titol, l.autor, u.nom, u.cognoms, u.dni
+        FROM llibres l
+        LEFT JOIN usuaris u ON l.dni_prestec = u.dni
+        ''')
+        return cursor.fetchall()
+    
+    def afegir_usuari(self, usuari: Usuari) -> str:
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('''
+            INSERT INTO usuaris (dni, nom, cognoms)
+            VALUES (?, ?, ?)
+            ''', (usuari.dni, usuari.nom, usuari.cognoms))
+            self.conn.commit()
+            return "Usuari afegit correctament"
+        except sqlite3.IntegrityError:
+            return "Error: Ja existeix un usuari amb aquest DNI"
+    
+    def afegir_llibre(self, llibre: Llibre) -> str:
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('''
+            INSERT INTO llibres (titol, autor, dni_prestec)
+            VALUES (?, ?, ?)
+            ''', (llibre.titol, llibre.autor, llibre.dni_prestec))
+            self.conn.commit()
+            return "Llibre afegit correctament"
+        except sqlite3.IntegrityError:
+            return "Error: Ja existeix un llibre amb aquest títol"
+    
+    def imprimir_usuari5(self) -> str:
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM usuaris LIMIT 5')
+        usuaris = cursor.fetchall()
+        resultat = ""
+        for usuari in usuaris:
+            resultat += f"DNI: {usuari[0]}, Nom: {usuari[1]}, Cognoms: {usuari[2]}\n"
+        return resultat if resultat else "No hi ha usuaris registrats"
+    
+    def imprimir_llibres(self, filtre: str = "tots") -> str:
+        cursor = self.conn.cursor()
+        if filtre == "prestec":
+            cursor.execute('SELECT * FROM llibres WHERE dni_prestec != "None"')
+        elif filtre == "disponibles":
+            cursor.execute('SELECT * FROM llibres WHERE dni_prestec = "None"')
+        else:
+            cursor.execute('SELECT * FROM llibres')
+        
+        llibres = cursor.fetchall()
+        resultat = ""
+        for llibre in llibres:
+            estat = "Prestat" if llibre[2] != "None" else "Disponible"
+            resultat += f"Títol: {llibre[0]}, Autor: {llibre[1]}, Estat: {estat}\n"
+        return resultat if resultat else "No hi ha llibres registrats"
+    
+    def eliminar_usuari(self, dni: str) -> str:
+        cursor = self.conn.cursor()
+        # Verificar si l'usuari té llibres en préstec
+        cursor.execute('SELECT COUNT(*) FROM llibres WHERE dni_prestec = ?', (dni,))
+        if cursor.fetchone()[0] > 0:
+            return "Error: L'usuari té llibres en préstec. No es pot eliminar."
+        
+        cursor.execute('DELETE FROM usuaris WHERE dni = ?', (dni,))
+        self.conn.commit()
+        return "Usuari eliminat correctament" if cursor.rowcount > 0 else "Usuari no trobat"
+    
+    def eliminar_llibre(self, titol: str) -> str:
+        cursor = self.conn.cursor()
+        cursor.execute('DELETE FROM llibres WHERE titol = ?', (titol,))
+        self.conn.commit()
+        return "Llibre eliminat correctament" if cursor.rowcount > 0 else "Llibre no trobat"
+    
+    def prestar_llibre(self, titol: str, dni: str) -> str:
+        cursor = self.conn.cursor()
+        
+        # Verificar si l'usuari existeix
+        cursor.execute('SELECT 1 FROM usuaris WHERE dni = ?', (dni,))
+        if not cursor.fetchone():
+            return "Error: L'usuari no existeix"
+        
+        # Verificar si el llibre està disponible
+        cursor.execute('SELECT dni_prestec FROM llibres WHERE titol = ?', (titol,))
+        resultat = cursor.fetchone()
+        if not resultat:
+            return "Error: El llibre no existeix"
+        
+        if resultat[0] != "None":
+            return "Error: El llibre ja està en préstec"
+        
+        # Fer el préstec
+        cursor.execute('UPDATE llibres SET dni_prestec = ? WHERE titol = ?', (dni, titol))
+        self.conn.commit()
+        return "Préstec registrat correctament"
+    
+    def tornar_llibre(self, titol: str) -> str:
+        cursor = self.conn.cursor()
+        
+        # Verificar si el llibre existeix i està en préstec
+        cursor.execute('SELECT dni_prestec FROM llibres WHERE titol = ?', (titol,))
+        resultat = cursor.fetchone()
+        if not resultat:
+            return "Error: El llibre no existeix"
+        
+        if resultat[0] == "None":
+            return "Error: El llibre no està en préstec"
+        
+        # Tornar el llibre
+        cursor.execute('UPDATE llibres SET dni_prestec = "None" WHERE titol = ?', (titol,))
+        self.conn.commit()
+        return "Llibre retornat correctament"
+
