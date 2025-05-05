@@ -16,3 +16,19 @@ class Usuari:
         self.dni = input("Introdueix el DNI: ")
         return "Dades introduïdes correctament"
 
+class Llibre:
+    def __init__(self, titol: str = "None", autor: str = "None", dni_prestec: str = "None"):
+        self.titol = titol
+        self.autor = autor
+        self.dni_prestec = dni_prestec
+    
+    def imprimir_dades(self) -> str:
+        estat = "Disponible" if self.dni_prestec == "None" else f"Prestat a DNI: {self.dni_prestec}"
+        return f"Títol: {self.titol}, Autor: {self.autor}, Estat: {estat}"
+    
+    def introduir_dades(self) -> str:
+        self.titol = input("Introdueix el títol: ")
+        self.autor = input("Introdueix l'autor: ")
+        self.dni_prestec = "None"
+        return "Dades introduïdes correctament"
+
