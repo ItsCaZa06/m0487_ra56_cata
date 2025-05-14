@@ -1,5 +1,7 @@
 import sqlite3
 from datetime import datetime
+import hashlib
+from getpass import getpass
 
 class Usuari:
     def __init__(self, nom: str = "None", cognoms: str = "None", dni: str = "None"):
@@ -15,6 +17,68 @@ class Usuari:
         self.cognoms = input("Introdueix els cognoms: ")
         self.dni = input("Introdueix el DNI: ")
         return "Dades introduïdes correctament"
+
+class UsuariRegistrat(Usuari):
+    """
+    Classe que hereda de Usuari i afegeix funcionalitats per gestionar usuaris registrats.
+
+    Atributs:
+        contrasenya (str): Contrasenya encriptada de l'usuari (atribut protegit).
+        tipus_usuari (str): Tipus d'usuari, pot ser "lector" o "admin".
+    """
+    def __init__(self, tipus_usuari: str = "lector", **kwargs):
+        """
+        Constructor de la classe UsuariRegistrat.
+
+        Args:
+            tipus_usuari (str): Tipus d'usuari, per defecte "lector".
+            **kwargs: Atributs addicionals per inicialitzar la classe base Usuari.
+        """
+        super().__init__(**kwargs)
+        self._contrasenya = None
+        self.tipus_usuari = tipus_usuari if tipus_usuari in ["lector", "admin"] else "lector"
+
+    def _encripta_contrasenya(self, contrasenya_clara: str) -> str:
+        """
+        Encripta la contrasenya utilitzant hashlib.
+
+        Args:
+            contrasenya_clara (str): Contrasenya en text pla.
+
+        Returns:
+            str: Contrasenya encriptada.
+        """
+        return hashlib.sha256(contrasenya_clara.encode()).hexdigest()
+
+    def introduir_contrasenya(self):
+        """
+        Permet introduir i encriptar la contrasenya de l'usuari.
+        """
+        contrasenya_clara = getpass("Introdueix la contrasenya: ")
+        self._contrasenya = self._encripta_contrasenya(contrasenya_clara)
+        print("Contrasenya configurada correctament.")
+
+    def verificar_contrasenya(self, contrasenya_a_verificar: str) -> bool:
+        """
+        Verifica si una contrasenya coincideix amb la contrasenya encriptada.
+
+        Args:
+            contrasenya_a_verificar (str): Contrasenya a verificar.
+
+        Returns:
+            bool: True si coincideix, False en cas contrari.
+        """
+        return self._contrasenya == self._encripta_contrasenya(contrasenya_a_verificar)
+
+    def imprimir_dades(self) -> str:
+        """
+        Sobreescriu el mètode imprimir_dades per incloure el tipus d'usuari.
+
+        Returns:
+            str: Dades de l'usuari registrat.
+        """
+        dades_base = super().imprimir_dades()
+        return f"{dades_base}, Tipus d'usuari: {self.tipus_usuari}"
 
 class Llibre:
     def __init__(self, titol: str = "None", autor: str = "None", dni_prestec: str = "None"):
